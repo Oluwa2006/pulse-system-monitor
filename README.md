@@ -47,7 +47,7 @@ Two runtime dependencies, no database, no accounts, no cloud services.
 Requires Node.js 18 or newer.
 
 ```bash
-git clone https://github.com/<your-username>/pulse-system-monitor.git
+git clone https://github.com/Oluwa2006/pulse-system-monitor.git
 cd pulse-system-monitor
 npm install
 npm start
