@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" />
+<style>
+  html, body { margin: 0; padding: 0; background: transparent; }
+  svg { display: block; }
+</style>
+</head>
+<body>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Rounded plate, inset so macOS grid spacing looks right. -->
+  <rect x="96" y="96" width="832" height="832" rx="196"
+        fill="#07090d" stroke="#b6ff2b" stroke-width="7" stroke-opacity="0.45" />
+
+  <!-- Corner brackets, echoing the panels in the interface. -->
+  <g stroke="#b6ff2b" stroke-width="16" fill="none" stroke-linecap="square">
+    <path d="M232 328 L232 232 L328 232" />
+    <path d="M696 232 L792 232 L792 328" />
+    <path d="M792 696 L792 792 L696 792" />
+    <path d="M328 792 L232 792 L232 696" />
+  </g>
+
+  <!-- A single strong pulse: stays legible when the icon is 32px wide. -->
+  <polyline points="268,512 404,512 470,368 542,676 606,512 756,512"
+            fill="none" stroke="#b6ff2b" stroke-width="36"
+            stroke-linecap="round" stroke-linejoin="round" />
+</svg>
+</body>
+</html>

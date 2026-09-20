@@ -50,6 +50,20 @@ Two runtime dependencies, no database, no accounts, no cloud services.
 
 ## Installation
 
+### Download (macOS)
+
+[**Download the latest release**](https://github.com/Oluwa2006/pulse-system-monitor/releases/latest) — take the `arm64` build for Apple Silicon or the `x64` build for Intel.
+
+The build is **unsigned**, so macOS will refuse to open it the first time. Either right-click the app and choose *Open*, then confirm at the prompt, or clear the quarantine flag directly:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Pulse.app
+```
+
+That is expected rather than a problem with the download: notarising a build requires a paid Apple Developer account. Running from source avoids it entirely.
+
+### From source
+
 Requires Node.js 20 or newer.
 
 ```bash
@@ -58,6 +72,14 @@ cd pulse-system-monitor
 npm install
 npm start
 ```
+
+### Building installers
+
+```bash
+npm run dist
+```
+
+Produces both architectures as `.dmg` files in `dist/`. The app icon is generated from `build/icon.html` with `npm run icon`; electron-builder converts it to `.icns` at package time.
 
 ### Tests
 

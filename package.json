@@ -6,7 +6,10 @@
   "scripts": {
     "start": "electron .",
     "probe": "node scripts/probe.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "icon": "electron scripts/make-icon.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --mac --arm64 --x64"
   },
   "keywords": [
     "electron",
@@ -22,9 +25,42 @@
   },
   "devDependencies": {
     "electron": "^44.4.3",
+    "electron-builder": "^26.15.3",
     "jsdom": "^29.1.1"
   },
   "engines": {
     "node": ">=20"
+  },
+  "author": "Malkiel Godson",
+  "build": {
+    "appId": "com.malkielgodson.pulse",
+    "productName": "Pulse",
+    "copyright": "Copyright (c) 2026 Malkiel Godson",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "category": "public.app-category.utilities",
+      "icon": "build/icon.png",
+      "identity": null,
+      "darkModeSupport": true
+    },
+    "dmg": {
+      "title": "${productName} ${version}"
+    }
   }
 }
