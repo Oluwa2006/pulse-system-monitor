@@ -22,14 +22,14 @@ function makeProcess(overrides = {}) {
 function makeSnapshot(overrides = {}) {
   return merge({
     timestamp: BASE_TIME,
-    cpu: { usage: 20, average: 20, cores: 8, model: 'Test CPU', history: [20] },
+    cpu: { usage: 20, average: 20, cores: 8, model: 'Test CPU', history: [20], perCore: [20, 20, 20, 20, 20, 20, 20, 20] },
     memory: { usedBytes: 8 * GB, totalBytes: 16 * GB, freeBytes: 8 * GB, percent: 50 },
     storage: {
       mount: '/', filesystem: 'test',
       totalBytes: 500 * GB, usedBytes: 250 * GB, freeBytes: 250 * GB, percent: 50
     },
     network: { interface: 'en0', connected: true, latencyMs: 20, rxPerSec: 0, txPerSec: 0 },
-    processes: { total: 100, running: 50, byCpu: [], byMemory: [] },
+    processes: { total: 100, groups: 40, running: 50, byCpu: [], byMemory: [] },
     system: { platform: 'darwin', hostname: 'test-host', uptimeSeconds: 3600, coreCount: 8 }
   }, overrides);
 }

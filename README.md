@@ -65,7 +65,15 @@ npm start
 npm test
 ```
 
-69 tests on Node's built-in runner, no test framework needed. They run on every push against Node 20, 22 and 24 on both Linux and macOS. They cover the rules engine, the regression maths, the event log, and the two platform quirks below — the parts where a bug is silent, producing confident wrong advice rather than a crash.
+96 tests on Node's built-in runner — no test framework, with `jsdom` as the only test-time dependency, there to give the renderer a DOM. They run on every push against Node 20, 22 and 24 on both Linux and macOS.
+
+Coverage is concentrated where a bug is *silent* rather than loud:
+
+- **Rules engine, trend maths, event log** — a mistake here produces confident wrong advice instead of a crash.
+- **Platform quirks** — the macOS data volume and the bundle resolution described below, both pinned so they cannot quietly regress.
+- **Renderer** — mounted exactly as shipped: the real `index.html` and `renderer.js` run in jsdom behind a stubbed preload bridge, so any load-time error fails the suite. That guards a bug that actually happened: a temporal-dead-zone throw at load left every reading on the dashboard as a placeholder dash while the styling still looked entirely correct.
+
+**What these tests cannot see.** jsdom has no layout engine, so nothing about size, overflow, or how a stretched `viewBox` distorts its own text is visible to them. Two of the three renderer bugs found while building the interface were exactly that kind, and both were caught by looking at the running application. Screenshots are the check there, not assertions — and that is a real limit, not a rounding error.
 
 To check the data layer without launching the interface:
 
