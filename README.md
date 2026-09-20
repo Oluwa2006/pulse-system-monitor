@@ -54,13 +54,13 @@ Two runtime dependencies, no database, no accounts, no cloud services.
 
 [**Download the latest release**](https://github.com/Oluwa2006/pulse-system-monitor/releases/latest) — take the `arm64` build for Apple Silicon or the `x64` build for Intel.
 
-The build is **unsigned**, so macOS will refuse to open it the first time. Either right-click the app and choose *Open*, then confirm at the prompt, or clear the quarantine flag directly:
+The build is **signed ad-hoc but not notarised**, so macOS will still stop it the first time with an "unidentified developer" prompt. Right-click the app and choose *Open*, then confirm — or clear the quarantine flag directly:
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/Pulse.app
 ```
 
-That is expected rather than a problem with the download: notarising a build requires a paid Apple Developer account. Running from source avoids it entirely.
+Notarising requires a paid Apple Developer account, so that prompt is the floor for a free build; running from source avoids it entirely. The signature itself is valid and internally consistent (`codesign --verify --deep --strict` passes), which is what keeps this at the ordinary prompt rather than the "app is damaged" error an inconsistent signature produces.
 
 ### From source
 
