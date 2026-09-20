@@ -12,7 +12,7 @@ Every number in the interface is read from the operating system. There is no sam
 
 ## Features
 
-- **CPU** — live utilization with a rolling sparkline, core count, and a short-window average that smooths out momentary spikes.
+- **CPU** — live utilization with a rolling sparkline, a short-window average that smooths out momentary spikes, and a per-core sensor bar for every physical core.
 - **Memory** — used and free bytes with a usage sparkline, based on *active* memory rather than the near-100% figure that includes filesystem cache.
 - **Storage** — capacity and free space for the volume that actually fills up (see [Architecture](#architecture)).
 - **Network** — round-trip latency, the active interface, connection state, and live throughput.
@@ -20,16 +20,19 @@ Every number in the interface is read from the operating system. There is no sam
 - **Diagnostics** — the rules engine that turns those readings into findings, sorted problems-first, each one naming the process responsible where there is one.
 - **Trends** — a rolling 30-minute window lets the engine reason about direction, not just position: memory climbing steadily, a single app that only ever grows, load that has persisted rather than spiked.
 - **Event log** — every stretch of time a resource spent unhealthy is recorded, so a spike that happened while you were away is still there when you come back.
+- **Load profile** — CPU, memory and storage plotted together on one radar, with the last eight samples left on screen faintly so drift shows as a spread rather than a number.
 
 ## Screenshots
 
-**Dashboard**
+**Dashboard — diagnostics feed**
 
-![Pulse dashboard showing CPU, memory, storage and network cards above a grouped process list](docs/screenshot-dashboard.png)
+![Pulse dashboard in lime on black: status bar, CPU memory storage and network readouts with gauges, per-core sensor bars, grouped process table, load-profile radar, and a diagnostics feed](docs/screenshot-dashboard.png)
 
-**Diagnostics**
+**Activity feed — event log**
 
-![System diagnostics panel listing storage and memory warnings above healthy CPU and network checks](docs/screenshot-diagnostics.png)
+![The same dashboard with the activity feed switched to events, showing two ongoing episodes with their durations](docs/screenshot-diagnostics.png)
+
+The hostname is redacted in both shots. Everything else is live data from the machine they were taken on.
 
 ## Technology
 
@@ -38,6 +41,7 @@ Every number in the interface is read from the operating system. There is no sam
 | Shell | Electron 44 |
 | Runtime | Node.js |
 | Interface | HTML, CSS, vanilla JavaScript — no framework, no build step |
+| Charts | Hand-drawn inline SVG — sparklines, gauge arcs and the radar are all built from raw geometry |
 | System data | [`systeminformation`](https://github.com/sebhildebrandt/systeminformation) |
 
 Two runtime dependencies, no database, no accounts, no cloud services.

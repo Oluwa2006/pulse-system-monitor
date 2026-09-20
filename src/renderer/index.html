@@ -8,112 +8,196 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="app" id="app">
+  <div class="app">
 
-    <header class="masthead">
+    <!-- ── status bar ─────────────────────────────────────────────── -->
+    <header class="statusbar bracket">
       <div class="brand">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <h1>PULSE</h1>
+        <span class="brand-grid" aria-hidden="true"></span>
+        <span class="brand-name">PULSE</span>
       </div>
-      <div class="health" id="health" data-level="ok">
-        <span class="health-label">SYSTEM HEALTH</span>
-        <span class="health-value" id="health-value">CHECKING…</span>
+
+      <div class="chip chip-health" id="health" data-level="ok">
+        <span class="chip-key">SYSTEM_HEALTH //</span>
+        <span class="chip-val" id="health-value">CHECKING</span>
       </div>
-      <div class="meta" id="meta"></div>
+
+      <div class="statusbar-meta">
+        <span class="chip"><span class="chip-key">HOST //</span><span class="chip-val" id="meta-host">—</span></span>
+        <span class="chip"><span class="chip-key">UPTIME //</span><span class="chip-val" id="meta-uptime">—</span></span>
+        <span class="chip"><span class="chip-key">CORES //</span><span class="chip-val" id="meta-cores">—</span></span>
+        <span class="chip chip-live"><span class="live-dot" aria-hidden="true"></span><span class="chip-val" id="meta-clock">—</span></span>
+      </div>
     </header>
 
-    <section class="cards" aria-label="System resources">
+    <div class="grid">
 
-      <article class="card" id="card-cpu">
-        <header class="card-head">
-          <h2>CPU</h2>
-          <span class="card-sub" id="cpu-model"></span>
-        </header>
-        <div class="card-figure" id="cpu-value">—</div>
-        <div class="card-note" id="cpu-note">&nbsp;</div>
-        <svg class="spark" id="cpu-spark" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden="true">
-          <polygon class="spark-area" points="" />
-          <polyline class="spark-line" points="" />
-        </svg>
-      </article>
+      <!-- ── left column ──────────────────────────────────────────── -->
+      <div class="col col-left">
 
-      <article class="card" id="card-memory">
-        <header class="card-head">
-          <h2>MEMORY</h2>
-          <span class="card-sub" id="memory-total"></span>
-        </header>
-        <div class="card-figure" id="memory-value">—</div>
-        <div class="card-note" id="memory-note">&nbsp;</div>
-        <svg class="spark" id="memory-spark" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden="true">
-          <polygon class="spark-area" points="" />
-          <polyline class="spark-line" points="" />
-        </svg>
-      </article>
+        <section class="panel bracket panel-title">
+          <h1>Dashboard</h1>
+          <span class="title-date" id="title-date"></span>
+        </section>
 
-      <article class="card" id="card-storage">
-        <header class="card-head">
-          <h2>STORAGE</h2>
-          <span class="card-sub" id="storage-mount"></span>
-        </header>
-        <div class="card-figure" id="storage-value">—</div>
-        <div class="card-note" id="storage-note">&nbsp;</div>
-        <div class="meter" aria-hidden="true"><span class="meter-fill" id="storage-meter"></span></div>
-      </article>
+        <section class="panel bracket">
+          <h2 class="panel-head">PROCESS_TABLE</h2>
+          <div class="statpair">
+            <div class="statcell">
+              <span class="statcell-num" id="stat-processes">—</span>
+              <span class="statcell-key">PROCESSES<br />RUNNING_NOW</span>
+            </div>
+            <div class="statcell">
+              <span class="statcell-num" id="stat-apps">—</span>
+              <span class="statcell-key">APPLICATIONS<br />GROUPED_BY_BUNDLE</span>
+            </div>
+          </div>
+        </section>
 
-      <article class="card" id="card-network">
-        <header class="card-head">
-          <h2>NETWORK</h2>
-          <span class="card-sub" id="network-interface"></span>
-        </header>
-        <div class="card-figure" id="network-value">—</div>
-        <div class="card-note" id="network-note">&nbsp;</div>
-        <div class="throughput" id="network-throughput"></div>
-      </article>
+        <section class="panel bracket panel-grow">
+          <h2 class="panel-head">RESOURCE_OVER_TIME</h2>
+          <div class="chart-wrap">
+            <div class="chart-grid" id="chart-grid"></div>
+            <svg class="bigchart" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <polyline class="chart-line line-cpu" id="line-cpu" points="" />
+              <polyline class="chart-line line-mem" id="line-mem" points="" />
+            </svg>
+          </div>
+          <div class="axis" id="chart-axis"></div>
+          <ul class="legend">
+            <li><span class="dot dot-cpu"></span>CPU_Load</li>
+            <li><span class="dot dot-mem"></span>Memory_Pressure</li>
+          </ul>
+        </section>
 
-    </section>
-
-    <section class="panel" aria-label="Running processes">
-      <header class="panel-head">
-        <h2>RUNNING PROCESSES</h2>
-        <div class="toggle" role="group" aria-label="Sort processes">
-          <button type="button" class="toggle-btn is-active" data-sort="cpu">CPU</button>
-          <button type="button" class="toggle-btn" data-sort="memory">MEMORY</button>
-        </div>
-      </header>
-      <table class="process-table">
-        <thead>
-          <tr>
-            <th scope="col">Application</th>
-            <th scope="col" class="num">CPU</th>
-            <th scope="col" class="num">Memory</th>
-          </tr>
-        </thead>
-        <tbody id="process-body">
-          <tr class="empty"><td colspan="3">Reading processes…</td></tr>
-        </tbody>
-      </table>
-      <p class="panel-foot" id="process-foot"></p>
-    </section>
-
-    <section class="panel" aria-label="System diagnostics">
-      <header class="panel-head">
-        <h2>SYSTEM DIAGNOSTICS</h2>
-        <span class="panel-tag" id="observed"></span>
-      </header>
-      <ul class="findings" id="findings">
-        <li class="finding" data-level="ok"><span class="finding-icon">·</span>
-          <div><p class="finding-title">Running first check…</p></div>
-        </li>
-      </ul>
-
-      <div class="events">
-        <h3 class="events-head">RECENT EVENTS</h3>
-        <ul class="event-list" id="events">
-          <li class="event-empty">Nothing to report since Pulse started.</li>
-        </ul>
       </div>
-    </section>
 
+      <!-- ── centre column ────────────────────────────────────────── -->
+      <div class="col col-centre">
+
+        <div class="row row-two">
+          <section class="panel bracket readout" id="card-cpu">
+            <div class="readout-head">
+              <h2 class="panel-head">CPU</h2>
+              <span class="readout-sub" id="cpu-sub"></span>
+            </div>
+            <div class="readout-body">
+              <span class="readout-num" id="cpu-value">—</span>
+              <svg class="gauge" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="gauge-track" cx="22" cy="22" r="17" />
+                <circle class="gauge-fill" id="cpu-gauge" cx="22" cy="22" r="17" />
+              </svg>
+            </div>
+            <svg class="spark" id="cpu-spark" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true">
+              <polyline class="spark-line" points="" />
+            </svg>
+            <span class="readout-foot" id="cpu-foot"></span>
+          </section>
+
+          <section class="panel bracket readout" id="card-memory">
+            <div class="readout-head">
+              <h2 class="panel-head">MEMORY</h2>
+              <span class="readout-sub" id="memory-sub"></span>
+            </div>
+            <div class="readout-body">
+              <span class="readout-num" id="memory-value">—</span>
+              <svg class="gauge" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="gauge-track" cx="22" cy="22" r="17" />
+                <circle class="gauge-fill" id="memory-gauge" cx="22" cy="22" r="17" />
+              </svg>
+            </div>
+            <svg class="spark" id="memory-spark" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true">
+              <polyline class="spark-line" points="" />
+            </svg>
+            <span class="readout-foot" id="memory-foot"></span>
+          </section>
+        </div>
+
+        <div class="row row-two">
+          <section class="panel bracket readout" id="card-storage">
+            <div class="readout-head">
+              <h2 class="panel-head">STORAGE</h2>
+              <span class="readout-sub" id="storage-sub"></span>
+            </div>
+            <div class="readout-body">
+              <span class="readout-num" id="storage-value">—</span>
+              <svg class="gauge" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="gauge-track" cx="22" cy="22" r="17" />
+                <circle class="gauge-fill" id="storage-gauge" cx="22" cy="22" r="17" />
+              </svg>
+            </div>
+            <div class="meter"><span class="meter-fill" id="storage-meter"></span></div>
+            <span class="readout-foot" id="storage-foot"></span>
+          </section>
+
+          <section class="panel bracket readout" id="card-network">
+            <div class="readout-head">
+              <h2 class="panel-head">NETWORK</h2>
+              <span class="readout-sub" id="network-sub"></span>
+            </div>
+            <div class="readout-body">
+              <span class="readout-num" id="network-value">—</span>
+              <svg class="gauge" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="gauge-track" cx="22" cy="22" r="17" />
+                <circle class="gauge-fill" id="network-gauge" cx="22" cy="22" r="17" />
+              </svg>
+            </div>
+            <div class="throughput" id="network-throughput"></div>
+            <span class="readout-foot" id="network-foot"></span>
+          </section>
+        </div>
+
+        <section class="panel bracket">
+          <h2 class="panel-head">CORE_SENSORS</h2>
+          <div class="cores" id="cores"></div>
+        </section>
+
+        <section class="panel bracket panel-split">
+          <div class="split-main">
+            <h2 class="panel-head">RUNNING_PROCESSES</h2>
+            <div class="toggle" role="group" aria-label="Sort processes">
+              <button type="button" class="toggle-btn is-active" data-sort="cpu">CPU</button>
+              <button type="button" class="toggle-btn" data-sort="memory">MEMORY</button>
+            </div>
+            <table class="ptable">
+              <thead>
+                <tr><th>Application</th><th class="num">CPU</th><th class="num">Memory</th></tr>
+              </thead>
+              <tbody id="process-body">
+                <tr class="empty"><td colspan="3">Reading_processes</td></tr>
+              </tbody>
+            </table>
+            <p class="panel-foot" id="process-foot"></p>
+          </div>
+
+          <div class="split-aside">
+            <h2 class="panel-head">LOAD_PROFILE</h2>
+            <svg class="radar" id="radar" viewBox="0 0 210 150" aria-hidden="true">
+              <g class="radar-web" id="radar-web"></g>
+              <g class="radar-trail" id="radar-trail"></g>
+              <polygon class="radar-now" id="radar-now" points="" />
+              <g class="radar-labels" id="radar-labels"></g>
+            </svg>
+            <p class="radar-note">LAST_8_SAMPLES</p>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- ── right column ─────────────────────────────────────────── -->
+      <div class="col col-right">
+        <section class="panel bracket panel-grow">
+          <h2 class="panel-head">ACTIVITY_FEED</h2>
+          <div class="toggle" role="group" aria-label="Feed contents">
+            <button type="button" class="toggle-btn is-active" data-feed="findings">FINDINGS</button>
+            <button type="button" class="toggle-btn" data-feed="events">EVENTS</button>
+          </div>
+          <span class="feed-observed" id="observed"></span>
+          <ul class="feed" id="feed"></ul>
+        </section>
+      </div>
+
+    </div>
   </div>
   <script src="renderer.js"></script>
 </body>

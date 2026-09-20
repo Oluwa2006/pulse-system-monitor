@@ -69,6 +69,8 @@ class MetricsCollector {
     const usage = clampPercent(load.currentLoad);
     return {
       usage,
+      // Per-core load, already present in the same reading -- no extra cost.
+      perCore: (load.cpus || []).map((core) => clampPercent(core.load)),
       // Rolling average smooths out single-tick spikes so diagnostics do not
       // flap between "fine" and "critical" on every refresh.
       average: average(this.cpuHistory.slice(-5).concat(usage)),
@@ -196,6 +198,9 @@ class MetricsCollector {
 
     return {
       total: (processes.list || []).length,
+      // Distinct applications after grouping, which is the number a person
+      // would actually recognise as "what is running".
+      groups: list.length,
       running: processes.running || 0,
       byCpu,
       byMemory

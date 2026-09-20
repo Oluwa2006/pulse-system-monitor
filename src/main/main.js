@@ -18,10 +18,10 @@ let sampling = false;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 980,
-    height: 940,
-    minWidth: 720,
-    minHeight: 600,
+    width: 1440,
+    height: 900,
+    minWidth: 1100,
+    minHeight: 720,
     title: 'Pulse',
     backgroundColor: '#0b0e14',
     show: false,
