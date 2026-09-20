@@ -2,11 +2,21 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <!--
-    Required when a hardened-runtime build is signed ad-hoc rather than with a
-    Developer ID. Without it, library validation refuses to load Electron's
-    own frameworks and the app dies on launch.
-  -->
+  <!-- V8 compiles JavaScript at runtime. Without these two, the hardened
+       runtime kills the renderer the moment it tries to JIT. -->
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+  <true/>
+
+  <!-- Electron reads DYLD_* when locating its own frameworks. -->
+  <key>com.apple.security.cs.allow-dyld-environment-variables</key>
+  <true/>
+
+  <!-- Only needed when the build is signed ad-hoc, which is what a
+       contributor without a Developer ID certificate gets: library
+       validation would otherwise refuse to load Electron's frameworks.
+       Harmless on a Developer ID build and keeps both paths working. -->
   <key>com.apple.security.cs.disable-library-validation</key>
   <true/>
 </dict>

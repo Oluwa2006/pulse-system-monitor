@@ -9,7 +9,8 @@
     "test": "node --test test/*.test.js",
     "icon": "electron scripts/make-icon.js",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder --mac --arm64 --x64"
+    "dist": "electron-builder --mac --arm64 --x64",
+    "notarize": "node scripts/notarize.js"
   },
   "keywords": [
     "electron",
@@ -56,11 +57,12 @@
       ],
       "category": "public.app-category.utilities",
       "icon": "build/icon.png",
-      "identity": "-",
       "darkModeSupport": true,
       "hardenedRuntime": true,
       "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist"
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "notarize": false,
+      "gatekeeperAssess": false
     },
     "dmg": {
       "title": "${productName} ${version}"
