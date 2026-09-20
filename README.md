@@ -16,7 +16,7 @@ Every number in the interface is read from the operating system. There is no sam
 - **Memory** — used and free bytes with a usage sparkline, based on *active* memory rather than the near-100% figure that includes filesystem cache.
 - **Storage** — capacity and free space for the volume that actually fills up (see [Architecture](#architecture)).
 - **Network** — round-trip latency, the active interface, connection state, and live throughput.
-- **Processes** — top applications by CPU or memory, grouped so a browser's 28 helper processes read as one row, not 28.
+- **Processes** — top applications by CPU or memory, grouped by application bundle so a browser's 28 helper processes read as one row, not 28, and a helper is credited to the app that ships it rather than to its own name.
 - **Diagnostics** — the rules engine that turns those readings into findings, sorted problems-first, each one naming the process responsible where there is one.
 - **Trends** — a rolling 30-minute window lets the engine reason about direction, not just position: memory climbing steadily, a single app that only ever grows, load that has persisted rather than spiked.
 - **Event log** — every stretch of time a resource spent unhealthy is recorded, so a spike that happened while you were away is still there when you come back.
@@ -96,7 +96,9 @@ src/
 
 **Diagnostics own the thresholds.** The engine tags each finding with the resource it concerns, and the renderer colors each card from that verdict. Thresholds live in exactly one place.
 
-Two details worth knowing, because both are easy to get wrong:
+**Process names lie.** Grouping is done on the outermost `.app` bundle in a process's path, not on its name. ChatGPT ships helper processes named `Codex`, and VS Code's binary is just `Code` — grouping on names invents an application that is not installed and misses the one that is. Helpers nest their own bundles inside their parent's, so the first `.app` scanning left to right is the real application. Platforms without bundles fall back to cleaning up the process name.
+
+Three details worth knowing, because all are easy to get wrong:
 
 - **Memory** reports `active`, not `used`. On macOS `used` counts filesystem cache and sits near 100% permanently, which is true and useless.
 - **Storage** reports `/System/Volumes/Data` on macOS rather than `/`. macOS seals the system volume, so reading `/` returns a comfortable-looking 50%-full 24 GB volume while the disk the user is actually filling sits at 94%. It is still labelled `/` in the interface, because that is what it is to the person using it.
@@ -105,7 +107,6 @@ Two details worth knowing, because both are easy to get wrong:
 
 ## Future Improvements
 
-- Group processes by application bundle rather than by name. The current `normalizeName()` is a regex heuristic: it handles `Chrome Helper (GPU)` correctly but cannot tell two different Electron apps apart, so they merge into one row. `path` and `parentPid` are already available and would make this exact.
 - Back off polling while the window is hidden. The interval lives in the main process, which Chromium does not throttle, so a minimized Pulse samples at full rate.
 - Menu-bar tray with live CPU and a notification on critical findings.
 - Per-core CPU breakdown, GPU utilization, temperature and fan sensors.

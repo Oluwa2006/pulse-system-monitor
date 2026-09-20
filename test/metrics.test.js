@@ -3,9 +3,69 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { normalizeName, pickPrimaryDisk } = require('../src/main/metrics');
+const {
+  applicationName, bundleNameFromPath, normalizeName, pickPrimaryDisk
+} = require('../src/main/metrics');
 
-/* ---------- process name grouping ---------- */
+/* ---------- bundle resolution ---------- */
+
+test('the outermost bundle wins, because helpers nest inside their parent', () => {
+  // A helper carries its own .app inside the parent's; the inner one is not
+  // the application the user is running.
+  assert.equal(bundleNameFromPath(
+    '/Applications/Wispr Flow.app/Contents/Resources/dist/Wispr Flow.app/Contents/MacOS'
+  ), 'Wispr Flow');
+
+  assert.equal(bundleNameFromPath(
+    '/Users/x/Visual Studio Code.app/Contents/Frameworks/Code Helper (Renderer).app/Contents/MacOS'
+  ), 'Visual Studio Code');
+});
+
+test('a bundle at the very end of a path is still found', () => {
+  assert.equal(bundleNameFromPath('/Applications/Safari.app'), 'Safari');
+});
+
+test('paths with no bundle yield nothing rather than guessing', () => {
+  assert.equal(bundleNameFromPath('/System/Library/PrivateFrameworks/SkyLight.framework/Resources'), '');
+  assert.equal(bundleNameFromPath('/usr/bin'), '');
+  assert.equal(bundleNameFromPath(''), '');
+  assert.equal(bundleNameFromPath(undefined), '');
+  assert.equal(bundleNameFromPath(null), '');
+});
+
+test('a helper is attributed to the app that ships it, not to its own name', () => {
+  // ChatGPT ships helpers named "Codex". Grouping on the process name files
+  // them under an application that is not installed.
+  assert.equal(applicationName({
+    name: 'Codex (Renderer)',
+    path: '/Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152/Helpers/Codex (Renderer).app/Contents/MacOS'
+  }), 'ChatGPT');
+});
+
+test('the bundle name beats the terse binary name', () => {
+  assert.equal(applicationName({
+    name: 'Code',
+    path: '/Users/x/Visual Studio Code.app/Contents/MacOS'
+  }), 'Visual Studio Code');
+});
+
+test('two different apps built on the same runtime stay separate', () => {
+  // The V1 bug: grouping by binary name merged every Electron app into one row.
+  const slack = applicationName({ name: 'Electron', path: '/Applications/Slack.app/Contents/MacOS' });
+  const pulse = applicationName({ name: 'Electron', path: '/Applications/Pulse.app/Contents/MacOS' });
+
+  assert.equal(slack, 'Slack');
+  assert.equal(pulse, 'Pulse');
+  assert.notEqual(slack, pulse);
+});
+
+test('without a bundle, the cleaned-up process name is used', () => {
+  assert.equal(applicationName({ name: 'WindowServer', path: '/System/Library/Frameworks' }), 'WindowServer');
+  assert.equal(applicationName({ name: 'chrome.exe', path: 'C:\\Program Files\\Google\\chrome.exe' }), 'chrome.exe');
+  assert.equal(applicationName({ name: 'Code Helper (Renderer)', path: '' }), 'Code');
+});
+
+/* ---------- process name grouping (fallback path) ---------- */
 
 test('browser helper processes collapse onto the parent application', () => {
   assert.equal(normalizeName('Google Chrome Helper (GPU)'), 'Google Chrome');

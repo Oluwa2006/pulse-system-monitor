@@ -164,7 +164,7 @@ class MetricsCollector {
     const groups = new Map();
 
     for (const proc of processes.list || []) {
-      const name = normalizeName(proc.name);
+      const name = applicationName(proc);
       if (!name) continue;
 
       const existing = groups.get(name) || {
@@ -203,7 +203,33 @@ class MetricsCollector {
   }
 }
 
-/** Strips the helper/renderer suffixes so "Chrome Helper (GPU)" groups under "Chrome". */
+/**
+ * Resolves the application a process belongs to.
+ *
+ * The bundle path is authoritative where there is one: process names lie.
+ * ChatGPT's helpers are named "Codex", and VS Code's binary is just "Code",
+ * so grouping on the name alone invents an app that is not installed and
+ * misses the one that is. Only when there is no bundle do we fall back to
+ * cleaning up the name.
+ */
+function applicationName(proc) {
+  return bundleNameFromPath(proc.path) || normalizeName(proc.name);
+}
+
+/**
+ * Returns the outermost `.app` in a path, which is the real application.
+ *
+ * Helpers nest their own bundles inside their parent's --
+ * `Wispr Flow.app/Contents/Resources/.../Wispr Flow.app/...` -- so the first
+ * match scanning left to right is the one that belongs in the table.
+ */
+function bundleNameFromPath(path) {
+  if (!path || typeof path !== 'string') return '';
+  const match = /\/([^/]+)\.app\//.exec(`${path}/`);
+  return match ? match[1] : '';
+}
+
+/** Fallback for platforms without bundles: strip helper and renderer suffixes. */
 function normalizeName(rawName) {
   if (!rawName) return '';
   return rawName
@@ -261,4 +287,11 @@ function round(value, decimals = 0) {
 
 // normalizeName and pickPrimaryDisk are exported for tests: both encode
 // platform quirks that are easy to regress and awkward to catch by eye.
-module.exports = { MetricsCollector, HISTORY_LENGTH, normalizeName, pickPrimaryDisk };
+module.exports = {
+  MetricsCollector,
+  HISTORY_LENGTH,
+  applicationName,
+  bundleNameFromPath,
+  normalizeName,
+  pickPrimaryDisk
+};
