@@ -18,6 +18,8 @@ Every number in the interface is read from the operating system. There is no sam
 - **Network** — round-trip latency, the active interface, connection state, and live throughput.
 - **Processes** — top applications by CPU or memory, grouped so a browser's 28 helper processes read as one row, not 28.
 - **Diagnostics** — the rules engine that turns those readings into findings, sorted problems-first, each one naming the process responsible where there is one.
+- **Trends** — a rolling 30-minute window lets the engine reason about direction, not just position: memory climbing steadily, a single app that only ever grows, load that has persisted rather than spiked.
+- **Event log** — every stretch of time a resource spent unhealthy is recorded, so a spike that happened while you were away is still there when you come back.
 
 ## Screenshots
 
@@ -51,6 +53,14 @@ npm install
 npm start
 ```
 
+### Tests
+
+```bash
+npm test
+```
+
+62 tests on Node's built-in runner, no test framework needed. They cover the rules engine, the regression maths, the event log, and the two platform quirks below — the parts where a bug is silent, producing confident wrong advice rather than a crash.
+
 To check the data layer without launching the interface:
 
 ```bash
@@ -67,15 +77,20 @@ src/
 │   ├── main.js        Electron entry: window, 2s polling loop, IPC
 │   ├── metrics.js     Reads the machine; the only module touching the OS
 │   └── preload.js     contextBridge — exposes exactly three functions
+├── history/
+│   ├── history.js     Rolling window, per-app series, least-squares trends
+│   └── events.js      Episode log: when each resource went bad, and for how long
 ├── diagnostics/
-│   └── diagnostics.js Pure rules engine: snapshot in, findings out
+│   └── diagnostics.js Pure rules engine: snapshot (+ history) in, findings out
 └── renderer/
     ├── index.html
     ├── styles.css
     └── renderer.js    Presentation only; no Node access
 ```
 
-**Data flow.** `main.js` polls `metrics.js` every two seconds, passes the snapshot through `diagnostics.js`, and sends the combined result to the renderer over IPC. The renderer draws it. Data moves in one direction only.
+**Data flow.** `main.js` polls `metrics.js` every two seconds, records the snapshot into `history.js`, passes both through `diagnostics.js`, folds the verdict into `events.js`, and sends the result to the renderer over IPC. The renderer draws it. Data moves in one direction only.
+
+**Trends need evidence.** A slope alone is not a trend. `history.js` fits a least-squares line and reports R² alongside it, and a finding is only raised when the series has at least 20 samples spanning 5 minutes with a fit of 0.6 or better. A steep slope with a poor fit is a spiky workload; a moderate slope with a tight fit is a leak. Falling series are never reported, however cleanly they fit — freeing memory is not a problem.
 
 **Process isolation.** The renderer runs with `contextIsolation: true` and `nodeIntegration: false`, behind a Content Security Policy. Its entire interface to the system is the three functions in `preload.js`.
 
@@ -90,8 +105,8 @@ Two details worth knowing, because both are easy to get wrong:
 
 ## Future Improvements
 
-- Per-core CPU breakdown and GPU utilization
-- Temperature and fan sensors
-- Alert history, so a spike that happened while you were away is still visible
-- Click a process to see its full command and open file handles
-- Packaged installers via `electron-builder`
+- Group processes by application bundle rather than by name. The current `normalizeName()` is a regex heuristic: it handles `Chrome Helper (GPU)` correctly but cannot tell two different Electron apps apart, so they merge into one row. `path` and `parentPid` are already available and would make this exact.
+- Back off polling while the window is hidden. The interval lives in the main process, which Chromium does not throttle, so a minimized Pulse samples at full rate.
+- Menu-bar tray with live CPU and a notification on critical findings.
+- Per-core CPU breakdown, GPU utilization, temperature and fan sensors.
+- Packaged installers via `electron-builder`.

@@ -7,6 +7,8 @@
  * A finding must add something -- what is causing it, or what it means.
  */
 
+const { TREND_MIN_SPAN_MS } = require('../history/history');
+
 const THRESHOLDS = {
   cpu: { warn: 70, critical: 88 },
   memory: { warn: 78, critical: 90 },
@@ -14,19 +16,29 @@ const THRESHOLDS = {
   latency: { warn: 150, critical: 400 },
   // A single app crossing these is worth calling out by name.
   processCpuShare: 40,
-  processMemoryPercent: 25
+  processMemoryPercent: 25,
+  // Trend rules: how much growth counts as climbing, and how much of the
+  // window must be hot before load is called sustained rather than spiky.
+  memoryClimbBytes: 1.5 * 1024 ** 3,
+  sustainedCpuRatio: 0.7
 };
 
 const LEVELS = { ok: 0, warn: 1, critical: 2 };
 
-function analyze(snapshot) {
-  const findings = [
-    tag('cpu', checkCpu(snapshot)),
+/**
+ * @param {object} snapshot a reading from the metrics collector
+ * @param {object} [history] optional rolling window; enables the trend rules
+ */
+function analyze(snapshot, history) {
+  const findings = dropRedundantOk([
+    tag('cpu', checkCpu(snapshot, history)),
     tag('memory', checkMemory(snapshot)),
+    tag('memory', checkMemoryClimb(snapshot, history)),
     tag('storage', checkStorage(snapshot)),
     tag('network', checkNetwork(snapshot)),
-    ...checkProcessHogs(snapshot).map((f) => tag('process', f))
-  ].filter(Boolean);
+    ...checkProcessHogs(snapshot).map((f) => tag('process', f)),
+    ...checkLeakSuspects(snapshot, history).map((f) => tag('process', f))
+  ].filter(Boolean));
 
   return {
     health: overallHealth(findings),
@@ -50,23 +62,75 @@ function resourceLevels(findings) {
   return levels;
 }
 
-function checkCpu({ cpu, processes }) {
+function checkCpu({ cpu, processes }, history) {
   // Judged on the rolling average so a momentary spike is not an alarm.
   const value = cpu.average;
   const top = processes.byCpu[0];
   const blame = top && top.cpuShare >= 15
     ? ` ${top.name} is the largest consumer at ${top.cpuShare}% of total capacity.`
     : '';
+  // History turns "busy right now" into "busy for the last eleven minutes",
+  // which is the part that tells you whether to wait it out.
+  const duration = sustainedContext(history);
 
   if (value >= THRESHOLDS.cpu.critical) {
     return finding('critical', 'CPU under heavy load',
-      `Sustained processor usage is very high.${blame} The machine may feel slow or unresponsive.`);
+      `Processor usage is very high.${blame}${duration} The machine may feel slow or unresponsive.`);
   }
   if (value >= THRESHOLDS.cpu.warn) {
     return finding('warn', 'CPU usage elevated',
-      `The processor has been busy over the last few samples.${blame}`);
+      `The processor has been busy over the last few samples.${blame}${duration}`);
   }
   return finding('ok', 'CPU usage normal', `Averaging ${value}% across ${cpu.cores} cores.`);
+}
+
+/** Returns a sentence about how long load has persisted, or '' if unknown. */
+function sustainedContext(history) {
+  if (!history || history.spanMs < TREND_MIN_SPAN_MS) return '';
+  const ratio = history.cpuLoadRatio(THRESHOLDS.cpu.warn);
+  if (ratio < THRESHOLDS.sustainedCpuRatio) return '';
+  return ` It has stayed above ${THRESHOLDS.cpu.warn}% for ${Math.round(ratio * 100)}%`
+    + ` of the last ${formatDuration(history.spanMs)}, so this is steady work rather than a spike.`;
+}
+
+/** Total memory drifting upward over the window, regardless of the current level. */
+function checkMemoryClimb(_snapshot, history) {
+  if (!history) return null;
+
+  const trend = history.memoryTrend();
+  if (!trend || !trend.confident) return null;
+  if (trend.change < THRESHOLDS.memoryClimbBytes) return null;
+
+  return finding('warn', 'Memory use is climbing',
+    `Up ${formatBytes(trend.change)} over the last ${formatDuration(trend.spanMs)}`
+    + ` — roughly ${formatBytes(trend.slopePerHour)} an hour at this rate.`);
+}
+
+/**
+ * Names an application whose memory only ever goes up. A steady climb with a
+ * tight fit is the signature of a leak; a spiky one is just a busy app.
+ */
+function checkLeakSuspects(_snapshot, history) {
+  if (!history) return [];
+
+  const growing = history.growingApps();
+  if (!growing.length) return [];
+
+  const worst = growing[0];
+  return [finding('warn', `${worst.name} keeps growing`,
+    `It has gained ${formatBytes(worst.change)} over ${formatDuration(worst.spanMs)} without levelling off,`
+    + ' which usually means a leak rather than normal use. Restarting it should reclaim the memory.')];
+}
+
+/**
+ * Drops the reassuring "all good" line for any resource that also has a real
+ * problem, so the panel never says a resource is healthy and failing at once.
+ */
+function dropRedundantOk(findings) {
+  const troubled = new Set(
+    findings.filter((f) => f.level !== 'ok').map((f) => f.resource)
+  );
+  return findings.filter((f) => f.level !== 'ok' || !troubled.has(f.resource));
 }
 
 function checkMemory({ memory, processes }) {
@@ -152,6 +216,15 @@ function finding(level, title, detail) {
   return { level, title, detail };
 }
 
+function formatDuration(ms) {
+  const minutes = Math.round(ms / 60000);
+  if (minutes < 1) return 'under a minute';
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'}`;
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return remainder ? `${hours}h ${remainder}m` : `${hours} hour${hours === 1 ? '' : 's'}`;
+}
+
 function formatBytes(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) return '0 MB';
   const gb = bytes / 1024 ** 3;
@@ -159,4 +232,4 @@ function formatBytes(bytes) {
   return `${Math.round(bytes / 1024 ** 2)} MB`;
 }
 
-module.exports = { analyze, THRESHOLDS, formatBytes };
+module.exports = { analyze, THRESHOLDS, formatBytes, formatDuration };

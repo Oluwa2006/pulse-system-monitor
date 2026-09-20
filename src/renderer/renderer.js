@@ -22,7 +22,9 @@ const dom = {
   network: { card: el('card-network'), value: el('network-value'), note: el('network-note'), iface: el('network-interface'), throughput: el('network-throughput') },
   processBody: el('process-body'),
   processFoot: el('process-foot'),
-  findings: el('findings')
+  findings: el('findings'),
+  events: el('events'),
+  observed: el('observed')
 };
 
 /* ---------- wiring ---------- */
@@ -61,6 +63,7 @@ function render(snapshot) {
   renderNetwork(snapshot.network, levels.network);
   renderProcesses(snapshot.processes);
   renderFindings(snapshot.diagnostics.findings);
+  renderEvents(snapshot.events || [], snapshot.observedMs || 0);
 }
 
 function renderHealth(health) {
@@ -185,6 +188,49 @@ function renderFindings(findings) {
   }
 }
 
+/**
+ * The log of what already happened. Without this the panel can only ever
+ * describe this instant, and a spike that ended two minutes ago never existed.
+ */
+function renderEvents(events, observedMs) {
+  dom.observed.textContent = observedMs >= 60000
+    ? `WATCHING ${formatSpan(observedMs)}`
+    : '';
+
+  dom.events.replaceChildren();
+
+  if (!events.length) {
+    const empty = document.createElement('li');
+    empty.className = 'event-empty';
+    empty.textContent = 'Nothing to report since Pulse started.';
+    dom.events.append(empty);
+    return;
+  }
+
+  for (const event of events) {
+    const li = document.createElement('li');
+    li.className = event.ongoing ? 'event is-ongoing' : 'event';
+    li.dataset.level = event.level;
+
+    const icon = document.createElement('span');
+    icon.className = 'event-icon';
+    icon.textContent = ICONS[event.level];
+
+    const title = document.createElement('span');
+    title.className = 'event-title';
+    title.textContent = event.title;
+
+    const when = document.createElement('span');
+    when.className = 'event-when';
+    when.textContent = event.ongoing
+      ? `ongoing · ${formatSpan(event.durationMs)}`
+      : `${formatSpan(event.durationMs)} · ended ${clockAt(event.endedAt)}`;
+
+    li.append(icon, title, when);
+    dom.events.append(li);
+  }
+}
+
 /* ---------- helpers ---------- */
 
 /** Maps a percentage history into the polyline of a 100x32 viewBox. */
@@ -234,6 +280,19 @@ function formatRate(bytesPerSecond) {
   const mb = bytesPerSecond / 1024 ** 2;
   if (mb >= 1) return `${mb.toFixed(1)} MB/s`;
   return `${Math.round(bytesPerSecond / 1024)} KB/s`;
+}
+
+/** Compact duration for the event log: 45s, 4m, 1h 12m. */
+function formatSpan(ms) {
+  const seconds = Math.round(ms / 1000);
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+}
+
+function clockAt(timestamp) {
+  return new Date(timestamp).toLocaleTimeString([], { hour12: false, timeStyle: 'short' });
 }
 
 function formatUptime(seconds) {

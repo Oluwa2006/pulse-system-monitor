@@ -4,10 +4,14 @@ const path = require('path');
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const { MetricsCollector } = require('./metrics');
 const { analyze } = require('../diagnostics/diagnostics');
+const { History } = require('../history/history');
+const { EventLog } = require('../history/events');
 
 const REFRESH_INTERVAL_MS = 2000;
 
 const collector = new MetricsCollector();
+const history = new History();
+const events = new EventLog();
 let mainWindow = null;
 let pollTimer = null;
 let sampling = false;
@@ -50,9 +54,19 @@ async function tick() {
 
   try {
     const snapshot = await collector.sample();
-    const diagnostics = analyze(snapshot);
+
+    // Record before analyzing so the trend rules can see the current sample.
+    history.record(snapshot);
+    const diagnostics = analyze(snapshot, history);
+    events.record(diagnostics, snapshot.timestamp);
+
     if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('pulse:update', { ...snapshot, diagnostics });
+      mainWindow.webContents.send('pulse:update', {
+        ...snapshot,
+        diagnostics,
+        events: events.recent({ now: snapshot.timestamp }),
+        observedMs: history.spanMs
+      });
     }
   } catch (err) {
     if (mainWindow && !mainWindow.isDestroyed()) {

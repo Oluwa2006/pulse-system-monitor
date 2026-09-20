@@ -259,4 +259,6 @@ function round(value, decimals = 0) {
   return Math.round(value * factor) / factor;
 }
 
-module.exports = { MetricsCollector, HISTORY_LENGTH };
+// normalizeName and pickPrimaryDisk are exported for tests: both encode
+// platform quirks that are easy to regress and awkward to catch by eye.
+module.exports = { MetricsCollector, HISTORY_LENGTH, normalizeName, pickPrimaryDisk };
