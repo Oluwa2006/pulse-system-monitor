@@ -1,5 +1,7 @@
 # Pulse System Monitor
 
+[![tests](https://github.com/Oluwa2006/pulse-system-monitor/actions/workflows/tests.yml/badge.svg)](https://github.com/Oluwa2006/pulse-system-monitor/actions/workflows/tests.yml)
+
 Lightweight desktop system monitor for tracking CPU, memory, storage, network activity, processes, and system health in real time.
 
 ## Overview
@@ -48,7 +50,7 @@ Two runtime dependencies, no database, no accounts, no cloud services.
 
 ## Installation
 
-Requires Node.js 18 or newer.
+Requires Node.js 20 or newer.
 
 ```bash
 git clone https://github.com/Oluwa2006/pulse-system-monitor.git
@@ -63,7 +65,7 @@ npm start
 npm test
 ```
 
-62 tests on Node's built-in runner, no test framework needed. They cover the rules engine, the regression maths, the event log, and the two platform quirks below — the parts where a bug is silent, producing confident wrong advice rather than a crash.
+69 tests on Node's built-in runner, no test framework needed. They run on every push against Node 20, 22 and 24 on both Linux and macOS. They cover the rules engine, the regression maths, the event log, and the two platform quirks below — the parts where a bug is silent, producing confident wrong advice rather than a crash.
 
 To check the data layer without launching the interface:
 
@@ -72,6 +74,21 @@ npm run probe
 ```
 
 This prints one real snapshot — metrics, grouped processes, and the diagnostics verdict — straight to the terminal.
+
+### Platform support
+
+Pulse is developed and used on macOS, and that is the only platform where the
+running application has been verified end to end. The rest is stated honestly
+rather than implied:
+
+| Platform | State |
+| --- | --- |
+| macOS | **Verified.** Every feature exercised against real hardware, including the two platform quirks below. |
+| Linux | **Partially verified.** The unit tests run on Linux in CI on every push, but the assembled application has never been launched there. |
+| Windows | **Unverified.** The volume picker has a `C:` branch and nothing else has been exercised. Treat it as untested. |
+
+The platform-specific surface is small and confined to `metrics.js` — process
+grouping and volume selection — so the gap is narrow, but it is a real gap.
 
 ## Architecture
 
