@@ -1,0 +1,25 @@
+{
+  "name": "pulse-system-monitor",
+  "version": "1.0.0",
+  "description": "Lightweight desktop system monitor for tracking CPU, memory, storage, network activity, processes, and system health in real time.",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "probe": "node scripts/probe.js"
+  },
+  "keywords": [
+    "electron",
+    "system-monitor",
+    "diagnostics",
+    "cpu",
+    "memory"
+  ],
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "systeminformation": "^5.33.12"
+  },
+  "devDependencies": {
+    "electron": "^44.4.3"
+  }
+}

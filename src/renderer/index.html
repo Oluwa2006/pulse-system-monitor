@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self' data:;" />
+  <title>Pulse</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app" id="app">
+
+    <header class="masthead">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <h1>PULSE</h1>
+      </div>
+      <div class="health" id="health" data-level="ok">
+        <span class="health-label">SYSTEM HEALTH</span>
+        <span class="health-value" id="health-value">CHECKING…</span>
+      </div>
+      <div class="meta" id="meta"></div>
+    </header>
+
+    <section class="cards" aria-label="System resources">
+
+      <article class="card" id="card-cpu">
+        <header class="card-head">
+          <h2>CPU</h2>
+          <span class="card-sub" id="cpu-model"></span>
+        </header>
+        <div class="card-figure" id="cpu-value">—</div>
+        <div class="card-note" id="cpu-note">&nbsp;</div>
+        <svg class="spark" id="cpu-spark" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden="true">
+          <polygon class="spark-area" points="" />
+          <polyline class="spark-line" points="" />
+        </svg>
+      </article>
+
+      <article class="card" id="card-memory">
+        <header class="card-head">
+          <h2>MEMORY</h2>
+          <span class="card-sub" id="memory-total"></span>
+        </header>
+        <div class="card-figure" id="memory-value">—</div>
+        <div class="card-note" id="memory-note">&nbsp;</div>
+        <svg class="spark" id="memory-spark" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden="true">
+          <polygon class="spark-area" points="" />
+          <polyline class="spark-line" points="" />
+        </svg>
+      </article>
+
+      <article class="card" id="card-storage">
+        <header class="card-head">
+          <h2>STORAGE</h2>
+          <span class="card-sub" id="storage-mount"></span>
+        </header>
+        <div class="card-figure" id="storage-value">—</div>
+        <div class="card-note" id="storage-note">&nbsp;</div>
+        <div class="meter" aria-hidden="true"><span class="meter-fill" id="storage-meter"></span></div>
+      </article>
+
+      <article class="card" id="card-network">
+        <header class="card-head">
+          <h2>NETWORK</h2>
+          <span class="card-sub" id="network-interface"></span>
+        </header>
+        <div class="card-figure" id="network-value">—</div>
+        <div class="card-note" id="network-note">&nbsp;</div>
+        <div class="throughput" id="network-throughput"></div>
+      </article>
+
+    </section>
+
+    <section class="panel" aria-label="Running processes">
+      <header class="panel-head">
+        <h2>RUNNING PROCESSES</h2>
+        <div class="toggle" role="group" aria-label="Sort processes">
+          <button type="button" class="toggle-btn is-active" data-sort="cpu">CPU</button>
+          <button type="button" class="toggle-btn" data-sort="memory">MEMORY</button>
+        </div>
+      </header>
+      <table class="process-table">
+        <thead>
+          <tr>
+            <th scope="col">Application</th>
+            <th scope="col" class="num">CPU</th>
+            <th scope="col" class="num">Memory</th>
+          </tr>
+        </thead>
+        <tbody id="process-body">
+          <tr class="empty"><td colspan="3">Reading processes…</td></tr>
+        </tbody>
+      </table>
+      <p class="panel-foot" id="process-foot"></p>
+    </section>
+
+    <section class="panel" aria-label="System diagnostics">
+      <header class="panel-head">
+        <h2>SYSTEM DIAGNOSTICS</h2>
+      </header>
+      <ul class="findings" id="findings">
+        <li class="finding" data-level="ok"><span class="finding-icon">·</span>
+          <div><p class="finding-title">Running first check…</p></div>
+        </li>
+      </ul>
+    </section>
+
+  </div>
+  <script src="renderer.js"></script>
+</body>
+</html>
