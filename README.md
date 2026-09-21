@@ -158,7 +158,8 @@ Three details worth knowing, because all are easy to get wrong:
 
 ## Future Improvements
 
-- Back off polling while the window is hidden. The interval lives in the main process, which Chromium does not throttle, so a minimized Pulse samples at full rate.
+- Back off polling while the window is hidden. The interval lives in the main process, which Chromium does not throttle, so a minimised Pulse samples at full rate.
 - Menu-bar tray with live CPU and a notification on critical findings.
-- Per-core CPU breakdown, GPU utilization, temperature and fan sensors.
-- Packaged installers via `electron-builder`.
+- GPU utilisation, temperature and fan sensors, alongside the existing per-core readings.
+- Tests for layout. The renderer suite runs in jsdom, which has no layout engine, so size and overflow bugs are still caught only by looking at the running app.
+- Verify the Linux build end to end. The unit tests run there in CI, but the assembled application has never been launched on it.
